@@ -20,7 +20,7 @@ parser.add_argument('--test-batch-size', type=int, default=20, metavar='N',
                     help='input batch size for testing (default: 20)')
 parser.add_argument('--test-intvl', type=int, default=1, metavar='N',
                     help='test intvl (default: 1)')
-parser.add_argument('--epochs', type=int, default=25, metavar='N',
+parser.add_argument('--epochs', type=int, default=30, metavar='N',
                     help='number of epochs to train (default: 25)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -190,6 +190,7 @@ def main():
     # model
     #A, B, C, D = 64, 8, 16, 16
     A, B, C, D = 32, 32, 32, 32
+    # A, B, C, D = 32, 32, 4, 4
     model = capsules(A=A, B=B, C=C, D=D, E=num_class,
                      iters=args.em_iters).to(device)
 
