@@ -7,6 +7,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
+from mem_profile import get_gpu_memory_map
+from numpy import prod
 
 from model import capsules
 from loss import SpreadLoss
@@ -194,9 +196,14 @@ def main():
     model = capsules(A=A, B=B, C=C, D=D, E=num_class,
                      iters=args.em_iters).to(device)
 
+    print('Num params:', sum([prod(p.size())
+              for p in model.parameters()]))
+
     criterion = SpreadLoss(num_class=num_class, m_min=0.2, m_max=0.9)
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=1)
+
+    max_memory_usage = 0
 
     best_acc = test(test_loader, model, criterion, device)
     for epoch in range(1, args.epochs + 1):
@@ -205,8 +212,15 @@ def main():
         scheduler.step(acc)
         if epoch % args.test_intvl == 0:
             best_acc = max(best_acc, test(test_loader, model, criterion, device))
+
+    current_memory_usage = get_gpu_memory_map()[0]
+    if current_memory_usage > max_memory_usage:
+        max_memory_usage = current_memory_usage
+
     best_acc = max(best_acc, test(test_loader, model, criterion, device))
     print('best test accuracy: {:.6f}'.format(best_acc))
+
+    print('max. memory usage: ', max_memory_usage)
 
     snapshot(model, args.snapshot_folder, args.epochs)
 
